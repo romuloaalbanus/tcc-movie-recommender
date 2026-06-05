@@ -1,5 +1,6 @@
 scikit-surprise
 flask
+gunicorn
 pandas
 matplotlib
 numpy
