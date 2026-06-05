@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sistema de Recomendação de Filmes — TCC</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Sistema de Recomendação de Filmes</h1>
+    <p class="subtitle">Avalie os filmes que já assistiu e receba recomendações personalizadas geradas por três algoritmos de filtragem colaborativa.</p>
+  </header>
+
+  <main>
+    {% if erro %}
+    <div class="erro" role="alert">{{ erro }}</div>
+    {% endif %}
+
+    <form method="POST" action="/recomendar">
+      <div class="instrucao">
+        <strong>Instrução:</strong> Para os filmes que você já assistiu, selecione uma nota de 1 a 5.
+        Deixe em branco os filmes que não conhece.
+      </div>
+
+      <div class="filmes-grid">
+        {% for filme in filmes %}
+        <div class="filme-card" data-id="{{ filme.id }}">
+          <img class="filme-poster" alt="Capa de {{ filme.titulo }}" />
+          <div class="filme-titulo">{{ filme.titulo }}</div>
+          <div class="filme-genero">{{ filme.genero }}</div>
+          <div class="estrelas" role="group" aria-label="Avaliação de {{ filme.titulo }}">
+            {% for n in [1,2,3,4,5] %}
+            <label title="{{ n }} estrela{% if n > 1 %}s{% endif %}">
+              <input type="radio" name="rating_{{ filme.id }}" value="{{ n }}"
+                     aria-label="{{ n }} estrela{% if n > 1 %}s{% endif %}" />
+              <span class="estrela" aria-hidden="true">★</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="btn-wrapper">
+        <button type="submit" class="btn-gerar">Gerar Recomendações</button>
+      </div>
+    </form>
+  </main>
+
+  <footer>
+    <p>TCC — Engenharia de Software &nbsp;·&nbsp; Algoritmos: User-Based CF, Item-Based CF, SVD</p>
+  </footer>
+
+  <script>
+    // ── Poster on hover ──
+    document.querySelectorAll('.filme-card').forEach(function(card) {
+      var timer = null;
+      var loaded = false;
+
+      card.addEventListener('mouseenter', function() {
+        if (loaded) return;
+        timer = setTimeout(function() {
+          var id = card.dataset.id;
+          fetch('/poster/' + id)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (!data.url) return;
+              var img = card.querySelector('.filme-poster');
+              img.src = data.url;
+              img.onload = function() { img.classList.add('carregado'); };
+              loaded = true;
+            });
+        }, 200);
+      });
+
+      card.addEventListener('mouseleave', function() {
+        clearTimeout(timer);
+      });
+    });
+
+    // ── Star rating ──
+    document.querySelectorAll('.estrelas').forEach(function(grupo) {
+      var labels = Array.from(grupo.querySelectorAll('label'));
+      var inputs = Array.from(grupo.querySelectorAll('input[type="radio"]'));
+
+      function highlight(n) {
+        labels.forEach(function(l, i) {
+          l.querySelector('.estrela').classList.toggle('ativa', i < n);
+        });
+      }
+
+      inputs.forEach(function(input, idx) {
+        input.addEventListener('change', function() { highlight(idx + 1); });
+      });
+
+      labels.forEach(function(label, idx) {
+        label.addEventListener('mouseenter', function() { highlight(idx + 1); });
+        label.addEventListener('mouseleave', function() {
+          var checked = grupo.querySelector('input:checked');
+          highlight(checked ? parseInt(checked.value) : 0);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

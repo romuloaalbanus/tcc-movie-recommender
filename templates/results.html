@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recomendações — TCC</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Suas Recomendações</h1>
+    <p class="subtitle">Top-10 filmes recomendados por cada algoritmo com base nas suas avaliações.</p>
+  </header>
+
+  <main>
+    <div class="algoritmos-info">
+      <div class="info-card">
+        <h3>User-Based CF</h3>
+        <p>Recomenda filmes assistidos por usuários com gostos similares ao seu. Usa correlação de Pearson entre perfis de usuários.</p>
+      </div>
+      <div class="info-card">
+        <h3>Item-Based CF</h3>
+        <p>Recomenda filmes parecidos com os que você gostou. Calcula similaridade entre itens com base nos padrões de avaliação.</p>
+      </div>
+      <div class="info-card">
+        <h3>SVD</h3>
+        <p>Decompõe a matriz de avaliações em fatores latentes, capturando padrões ocultos de preferência de forma eficiente.</p>
+      </div>
+    </div>
+
+    <div class="resultados-grid">
+      {% for algoritmo, filmes in recomendacoes.items() %}
+      <div class="resultado-col">
+        <h2 class="col-titulo">{{ algoritmo }}</h2>
+        <ol class="lista-filmes">
+          {% for filme in filmes %}
+          <li class="rec-item">
+            <div class="rec-titulo">{{ filme.titulo }}</div>
+            <div class="rec-meta">
+              <span class="genero">{{ filme.genero }}</span>
+              <span class="nota" aria-label="Nota {{ filme.nota }}">{{ filme.nota }}</span>
+            </div>
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="btn-wrapper">
+      <a href="/" class="btn-voltar">&#8592; Voltar e ajustar avaliações</a>
+    </div>
+  </main>
+
+  <footer>
+    <p>TCC — Engenharia de Software &nbsp;·&nbsp; Algoritmos: User-Based CF, Item-Based CF, SVD</p>
+  </footer>
+</body>
+</html>
