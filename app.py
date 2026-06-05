@@ -55,6 +55,33 @@ for uid, iid, _ in trainset_full.all_ratings():
 filmes_populares = sorted(contagem, key=contagem.get, reverse=True)[:20]
 
 
+def _buscar_poster(filme_id):
+    if filme_id in _poster_cache:
+        return
+    titulo_raw = filmes.get(filme_id, {}).get("titulo", "")
+    titulo = re.sub(r'\s*\(\d{4}\)$', '', titulo_raw).strip()
+    try:
+        r = requests.get("https://api.themoviedb.org/3/search/movie",
+                         params={"api_key": TMDB_API_KEY, "query": titulo, "language": "en-US"},
+                         timeout=4)
+        results = r.json().get("results", [])
+        if results and results[0].get("poster_path"):
+            _poster_cache[filme_id] = "https://image.tmdb.org/t/p/w300" + results[0]["poster_path"]
+            return
+    except Exception:
+        pass
+    _poster_cache[filme_id] = None
+
+
+def _precarregar_posters():
+    import threading
+    for fid in filmes_populares:
+        threading.Thread(target=_buscar_poster, args=(fid,), daemon=True).start()
+
+
+_precarregar_posters()
+
+
 def treinar_e_recomendar(avaliacoes_usuario):
     """Treina os 3 modelos e retorna top-10 recomendações para cada um."""
     # Adicionar avaliações do usuário ao dataset
@@ -107,24 +134,9 @@ def treinar_e_recomendar(avaliacoes_usuario):
 
 @app.route("/poster/<filme_id>")
 def poster(filme_id):
-    if filme_id in _poster_cache:
-        return jsonify(url=_poster_cache[filme_id])
-
-    titulo_raw = filmes.get(filme_id, {}).get("titulo", "")
-    titulo = re.sub(r'\s*\(\d{4}\)$', '', titulo_raw).strip()
-    url = None
-    try:
-        r = requests.get("https://api.themoviedb.org/3/search/movie",
-                         params={"api_key": TMDB_API_KEY, "query": titulo, "language": "en-US"},
-                         timeout=4)
-        results = r.json().get("results", [])
-        if results and results[0].get("poster_path"):
-            url = "https://image.tmdb.org/t/p/w300" + results[0]["poster_path"]
-    except Exception:
-        pass
-
-    _poster_cache[filme_id] = url
-    return jsonify(url=url)
+    if filme_id not in _poster_cache:
+        _buscar_poster(filme_id)
+    return jsonify(url=_poster_cache.get(filme_id))
 
 
 @app.route("/", methods=["GET"])
