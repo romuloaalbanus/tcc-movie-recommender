@@ -143,11 +143,17 @@ footer {
   object-fit: cover;
   border-radius: var(--radius-sm);
   display: block;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 300ms ease;
 }
 
-.filme-poster.carregado { opacity: 1; }
+
+.filme-poster-placeholder {
+  width: 100%;
+  aspect-ratio: 2/3;
+  border-radius: var(--radius-sm);
+  background: var(--color-muted);
+}
 
 .filme-titulo {
   font-family: var(--font-heading);

@@ -26,7 +26,11 @@
       <div class="filmes-grid">
         {% for filme in filmes %}
         <div class="filme-card" data-id="{{ filme.id }}">
-          <img class="filme-poster" alt="Capa de {{ filme.titulo }}" />
+          {% if filme.poster %}
+          <img class="filme-poster carregado" src="{{ filme.poster }}" alt="Capa de {{ filme.titulo }}" />
+          {% else %}
+          <div class="filme-poster-placeholder"></div>
+          {% endif %}
           <div class="filme-titulo">{{ filme.titulo }}</div>
           <div class="filme-genero">{{ filme.genero }}</div>
           <div class="estrelas" role="group" aria-label="Avaliação de {{ filme.titulo }}">
@@ -53,34 +57,11 @@
   </footer>
 
   <script>
-    // ── Poster on hover ──
-    document.querySelectorAll('.filme-card').forEach(function(card) {
-      var timer = null;
-      var loaded = false;
 
-      card.addEventListener('mouseenter', function() {
-        if (loaded) return;
-        timer = setTimeout(function() {
-          var id = card.dataset.id;
-          fetch('/poster/' + id)
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-              if (!data.url) return;
-              var img = card.querySelector('.filme-poster');
-              img.src = data.url;
-              img.onload = function() { img.classList.add('carregado'); };
-              loaded = true;
-            });
-        }, 200);
-      });
-
-      card.addEventListener('mouseleave', function() {
-        clearTimeout(timer);
-      });
-    });
 
     // ── Star rating ──
     document.querySelectorAll('.estrelas').forEach(function(grupo) {
+      var card = grupo.closest('.filme-card');
       var labels = Array.from(grupo.querySelectorAll('label'));
       var inputs = Array.from(grupo.querySelectorAll('input[type="radio"]'));
 
@@ -91,7 +72,10 @@
       }
 
       inputs.forEach(function(input, idx) {
-        input.addEventListener('change', function() { highlight(idx + 1); });
+        input.addEventListener('change', function() {
+          highlight(idx + 1);
+          card.classList.add('avaliado');
+        });
       });
 
       labels.forEach(function(label, idx) {

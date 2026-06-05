@@ -141,7 +141,7 @@ def poster(filme_id):
 
 @app.route("/", methods=["GET"])
 def index():
-    lista = [{"id": fid, **filmes[fid]} for fid in filmes_populares]
+    lista = [{"id": fid, **filmes[fid], "poster": _poster_cache.get(fid)} for fid in filmes_populares]
     return render_template("index.html", filmes=lista)
 
 
